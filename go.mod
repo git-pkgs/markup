@@ -1,6 +1,8 @@
 module github.com/git-pkgs/markup
 
-go 1.25.0
+go 1.26
+
+toolchain go1.26.7
 
 require (
 	github.com/niklasfasching/go-org v1.9.1
