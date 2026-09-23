@@ -86,8 +86,6 @@ The native formats (Markdown, Org-mode) need no external tools. For the others:
 | rst2html | `pip install docutils` or `apt install python3-docutils` | reStructuredText |
 | pod2html | Included with Perl | Pod |
 
-The included `Dockerfile` builds an image with all optional tools installed.
-
 ## Benchmarks
 
 ```
