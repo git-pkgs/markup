@@ -4,6 +4,12 @@ A Go library for rendering markup files to HTML. Given a filename and its conten
 
 Markdown and Org-mode are rendered natively in Go. Other formats (AsciiDoc, reStructuredText, Pod) shell out to external tools. The library has no global state, no forge-specific logic, and no opinion on post-processing.
 
+## Installation
+
+```sh
+go get github.com/git-pkgs/markup
+```
+
 ## Usage
 
 ```go
@@ -96,4 +102,4 @@ External renderers are dominated by subprocess overhead (~30ms for pod2html, ~90
 
 ## License
 
-MIT
+[MIT](LICENSE).
