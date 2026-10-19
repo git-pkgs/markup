@@ -137,9 +137,9 @@ func NewDefaultRegistry() *Registry {
 		".rst", ".rest")
 
 	r.Register(FormatPod, NewExternalRenderer(ExternalConfig{
-		Command:   "pod2html",
-		InputMode: InputTempFile,
-		Args:      []string{"--infile={file}", "--quiet"},
+		Command:     "pod2html",
+		InputMode:   InputTempFile,
+		Args:        []string{"--infile={file}", "--cachedir={dir}", "--quiet"},
 		BodyPattern: `(?s)<body[^>]*>\s*(.*?)\s*</body>`,
 	}), ".pod")
 
