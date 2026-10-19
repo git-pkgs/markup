@@ -34,7 +34,7 @@ type InputMode int
 
 const (
 	InputStdin    InputMode = iota // Pass content via stdin (default).
-	InputTempFile                  // Write to a temp file, replace {file} in args.
+	InputTempFile                  // Write to a temp file, replace {file} and {dir} in args.
 )
 
 const defaultTimeout = 30 * time.Second
@@ -45,7 +45,7 @@ const maxOutputSize = 2 * 1024 * 1024
 // ExternalConfig configures an external renderer.
 type ExternalConfig struct {
 	Command     string        // Command to execute.
-	Args        []string      // Arguments. Use {file} as a placeholder for temp file path.
+	Args        []string      // Arguments. {file} is the temp file path, {dir} a per-render scratch directory.
 	InputMode   InputMode     // How to pass content to the command.
 	Timeout     time.Duration // Command timeout. Zero means 30s default.
 	BodyPattern string        // Regex to extract body from full HTML output. Empty means use full output.
@@ -128,11 +128,16 @@ func (r *ExternalRenderer) renderWithTempFile(content []byte) (string, error) {
 		ext = "." + r.config.Command
 	}
 
-	f, err := os.CreateTemp("", "markup-*"+ext)
+	dir, err := os.MkdirTemp("", "markup-*")
 	if err != nil {
 		return "", err
 	}
-	defer func() { _ = os.Remove(f.Name()) }()
+	defer func() { _ = os.RemoveAll(dir) }()
+
+	f, err := os.CreateTemp(dir, "markup-*"+ext)
+	if err != nil {
+		return "", err
+	}
 
 	if _, err := f.Write(content); err != nil {
 		_ = f.Close()
@@ -142,7 +147,8 @@ func (r *ExternalRenderer) renderWithTempFile(content []byte) (string, error) {
 
 	args := make([]string, len(r.config.Args))
 	for i, arg := range r.config.Args {
-		args[i] = strings.ReplaceAll(arg, "{file}", f.Name())
+		arg = strings.ReplaceAll(arg, "{file}", f.Name())
+		args[i] = strings.ReplaceAll(arg, "{dir}", dir)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)

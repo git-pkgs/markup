@@ -520,6 +520,7 @@ func TestRenderPod(t *testing.T) {
 		t.Skip("pod2html not installed")
 	}
 	content := readTestdata(t, "README.pod")
+	t.Chdir(t.TempDir())
 	result, err := r.Render("README.pod", content)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -532,6 +533,13 @@ func TestRenderPod(t *testing.T) {
 	}
 	if strings.Contains(result.HTML, "<html") {
 		t.Errorf("expected body-only HTML, got full document")
+	}
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("renderer created files: %v", entries)
 	}
 }
 
@@ -716,6 +724,23 @@ func TestExternalRendererBodyExtraction(t *testing.T) {
 	}
 	if strings.Contains(html, "<html>") {
 		t.Error("expected html wrapper to be stripped")
+	}
+}
+
+func TestExternalRendererTempFilePlaceholders(t *testing.T) {
+	r := NewExternalRenderer(ExternalConfig{
+		Command:   "sh",
+		Args:      []string{"-c", `test "$(dirname "$2")" = "$1" && cat "$2"`, "sh", "{dir}", "{file}"},
+		InputMode: InputTempFile,
+		TempExt:   ".txt",
+	})
+
+	html, err := r.Render([]byte("<p>hi</p>"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if html != "<p>hi</p>" {
+		t.Errorf("html = %q, want %q", html, "<p>hi</p>")
 	}
 }
 
