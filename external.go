@@ -15,9 +15,9 @@ import (
 
 // limitedWriter wraps a writer and returns an error if the limit is exceeded.
 type limitedWriter struct {
-	w       io.Writer
-	n       int
-	limit   int
+	w     io.Writer
+	n     int
+	limit int
 }
 
 func (lw *limitedWriter) Write(p []byte) (int, error) {
@@ -230,7 +230,7 @@ func rstRender(content []byte) (string, error) {
 
 // toolCache caches which external tools are available.
 var (
-	toolCache   sync.Map
+	toolCache sync.Map
 )
 
 func toolAvailable(name string) bool {
