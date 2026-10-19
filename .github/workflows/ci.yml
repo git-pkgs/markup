@@ -25,7 +25,8 @@ jobs:
       - name: Install external renderers
         run: |
           sudo apt-get update
-          sudo apt-get install -y asciidoctor python3-docutils perl
+          sudo apt-get install -y asciidoctor python3-docutils perl ruby
+          rdoc --version
 
       - name: Build
         run: go build -v ./...

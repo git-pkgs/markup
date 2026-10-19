@@ -157,6 +157,7 @@ func NewDefaultRegistry() *Registry {
 
 	r.Register(FormatRDoc, NewExternalRenderer(ExternalConfig{
 		Command: "rdoc",
+		Args:    []string{"--pipe"},
 	}), ".rdoc")
 
 	return r
