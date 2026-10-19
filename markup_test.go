@@ -586,12 +586,25 @@ func TestRenderRDoc(t *testing.T) {
 		t.Skip("rdoc renderer not installed")
 	}
 	content := readTestdata(t, "README.rdoc")
+	t.Chdir(t.TempDir())
 	result, err := r.Render("README.rdoc", content)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if result.Format != FormatRDoc {
 		t.Errorf("Format = %v, want FormatRDoc", result.Format)
+	}
+	for _, want := range []string{"<ul>", "<li>", "<p>One</p>", `<a href="http://github.com">absolute link</a>`, `<a href="rawr.html">relative link</a>`} {
+		if !strings.Contains(result.HTML, want) {
+			t.Errorf("expected %q in HTML, got: %s", want, result.HTML)
+		}
+	}
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("renderer created files: %v", entries)
 	}
 }
 

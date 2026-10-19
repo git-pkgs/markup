@@ -37,7 +37,7 @@ The default registry comes with all supported formats pre-configured. Native for
 | Textile | .textile | consumer-provided (external) |
 | MediaWiki | .mediawiki, .wiki | consumer-provided (external) |
 | Creole | .creole | consumer-provided (external) |
-| RDoc | .rdoc | consumer-provided (external) |
+| RDoc | .rdoc | rdoc (external) |
 
 ## Format detection
 
@@ -85,6 +85,7 @@ The native formats (Markdown, Org-mode) need no external tools. For the others:
 | asciidoctor | `gem install asciidoctor` | AsciiDoc |
 | rst2html | `pip install docutils` or `apt install python3-docutils` | reStructuredText |
 | pod2html | Included with Perl | Pod |
+| rdoc | Included with Ruby | RDoc |
 
 ## Benchmarks
 
