@@ -18,7 +18,7 @@ func NewOrgRenderer() *OrgRenderer {
 }
 
 func (r *OrgRenderer) Render(content []byte) (string, error) {
-	conf := org.New()
+	conf := org.New().Silent()
 	// #+INCLUDE and #+SETUPFILE would otherwise read arbitrary local files.
 	conf.ReadFile = func(string) ([]byte, error) {
 		return nil, errFileAccessDisabled
