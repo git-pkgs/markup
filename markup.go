@@ -130,7 +130,7 @@ func NewDefaultRegistry() *Registry {
 
 	r.Register(FormatAsciiDoc, NewExternalRenderer(ExternalConfig{
 		Command: "asciidoctor",
-		Args:    []string{"-s", "-o", "-", "-"},
+		Args:    []string{"--safe-mode", "secure", "-s", "-o", "-", "-"},
 	}), ".adoc", ".asciidoc", ".asc")
 
 	r.Register(FormatRST, NewRSTRenderer(),
