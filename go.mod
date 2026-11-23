@@ -1,6 +1,6 @@
 module github.com/git-pkgs/markup
 
-go 1.26
+go 1.26.0
 
 toolchain go1.26.7
 
@@ -9,4 +9,4 @@ require (
 	github.com/yuin/goldmark v1.8.7
 )
 
-require golang.org/x/net v0.55.0 // indirect
+require golang.org/x/net v0.62.0 // indirect
