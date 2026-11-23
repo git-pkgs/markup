@@ -43,6 +43,27 @@ const defaultTimeout = 30 * time.Second
 // maxOutputSize is the maximum allowed output from an external command (2MB).
 const maxOutputSize = 2 * 1024 * 1024
 
+// envAllowlist names the host environment variables passed to external
+// commands. They receive nothing else, so untrusted input cannot reach
+// credentials held in the host environment through a renderer.
+var envAllowlist = []string{
+	"PATH", "HOME", "TMPDIR", "TMP", "TEMP", "SystemRoot",
+	"LANG", "LC_ALL", "LC_CTYPE", "TZ",
+	"GEM_HOME", "GEM_PATH", "RUBYLIB",
+	"PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV",
+	"PERL5LIB",
+}
+
+func commandEnv() []string {
+	env := make([]string, 0, len(envAllowlist))
+	for _, name := range envAllowlist {
+		if value, ok := os.LookupEnv(name); ok {
+			env = append(env, name+"="+value)
+		}
+	}
+	return env
+}
+
 // ExternalConfig configures an external renderer.
 type ExternalConfig struct {
 	Command     string        // Command to execute.
@@ -111,6 +132,7 @@ func (r *ExternalRenderer) renderWithStdin(content []byte) (string, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, r.config.Command, r.config.Args...)
+	cmd.Env = commandEnv()
 	cmd.Stdin = bytes.NewReader(content)
 
 	var stdout, stderr bytes.Buffer
@@ -156,6 +178,7 @@ func (r *ExternalRenderer) renderWithTempFile(content []byte) (string, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, r.config.Command, args...)
+	cmd.Env = commandEnv()
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &limitedWriter{w: &stdout, limit: maxOutputSize}
 	cmd.Stderr = &stderr

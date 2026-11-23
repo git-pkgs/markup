@@ -853,6 +853,28 @@ func TestExternalRendererAvailable(t *testing.T) {
 	}
 }
 
+func TestExternalRendererWithholdsHostEnvironment(t *testing.T) {
+	t.Setenv("MARKUP_HOST_SECRET", "hunter2")
+	t.Setenv("TZ", "UTC")
+	for _, config := range []ExternalConfig{
+		{Command: "env"},
+		{Command: "env", InputMode: InputTempFile},
+	} {
+		reg := NewRegistry()
+		reg.Register(FormatTextile, NewExternalRenderer(config), ".textile")
+		result, err := reg.Render("README.textile", []byte("text"))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if strings.Contains(result.HTML, "MARKUP_HOST_SECRET") {
+			t.Errorf("host variable passed to command: %s", result.HTML)
+		}
+		if !strings.Contains(result.HTML, "PATH=") || !strings.Contains(result.HTML, "TZ=UTC") {
+			t.Errorf("expected allowlisted variables in command environment, got: %s", result.HTML)
+		}
+	}
+}
+
 func TestExternalRendererBodyExtraction(t *testing.T) {
 	r := NewExternalRenderer(ExternalConfig{
 		Command:     "echo",
