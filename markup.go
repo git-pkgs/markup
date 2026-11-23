@@ -209,7 +209,7 @@ func (r *Registry) Supported(filename string) bool {
 	if !ok {
 		return false
 	}
-	if ext, ok := entry.renderer.(*ExternalRenderer); ok {
+	if ext, ok := entry.renderer.(interface{ Available() bool }); ok {
 		return ext.Available()
 	}
 	return true

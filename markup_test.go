@@ -2,6 +2,7 @@ package markup
 
 import (
 	"encoding/base64"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -196,6 +197,29 @@ func TestRegistrySupported(t *testing.T) {
 	}
 	if r.Supported("README.xyz") {
 		t.Error("expected .xyz to not be supported")
+	}
+}
+
+func TestRegistrySupportedRST(t *testing.T) {
+	binDir := t.TempDir()
+	t.Setenv("PATH", binDir)
+	toolCache.Clear()
+	t.Cleanup(toolCache.Clear)
+
+	r := NewDefaultRegistry()
+	if r.Supported("README.rst") {
+		t.Error("expected RST to be unsupported with no rst2html command installed")
+	}
+	if _, err := r.Render("README.rst", []byte("Title\n=====\n")); !errors.Is(err, ErrToolNotFound) {
+		t.Errorf("Render() error = %v, want %v", err, ErrToolNotFound)
+	}
+
+	if err := os.WriteFile(filepath.Join(binDir, "rst2html"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	toolCache.Clear()
+	if !r.Supported("README.rst") {
+		t.Error("expected RST to be supported once rst2html is installed")
 	}
 }
 
