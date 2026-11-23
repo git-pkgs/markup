@@ -457,7 +457,59 @@ func TestRenderOrgEmpty(t *testing.T) {
 	}
 }
 
+func writeSecret(t *testing.T) (path, secret string) {
+	t.Helper()
+	secret = "MARKUP_INCLUDE_SECRET"
+	path = filepath.Join(t.TempDir(), "secret.txt")
+	if err := os.WriteFile(path, []byte(secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return path, secret
+}
+
+func TestRenderOrgDoesNotReadFiles(t *testing.T) {
+	path, secret := writeSecret(t)
+	t.Chdir(filepath.Dir(path))
+	r := NewDefaultRegistry()
+	for _, content := range []string{
+		"#+INCLUDE: \"" + path + "\" src text\n",
+		"#+INCLUDE: \"" + path + "\" example text\n",
+		"#+INCLUDE: \"" + path + "\" export html\n",
+		"#+INCLUDE: \"secret.txt\" src text\n",
+	} {
+		result, err := r.Render("README.org", []byte(content))
+		if err != nil {
+			t.Fatalf("%q: unexpected error: %v", content, err)
+		}
+		if strings.Contains(result.HTML, secret) {
+			t.Errorf("%q: included file contents: %s", content, result.HTML)
+		}
+	}
+}
+
 // --- External renderers ---
+
+func TestRenderAsciiDocDoesNotReadFiles(t *testing.T) {
+	r := NewDefaultRegistry()
+	if !r.Supported("README.adoc") {
+		t.Skip("asciidoctor not installed")
+	}
+	path, secret := writeSecret(t)
+	t.Chdir(filepath.Dir(path))
+	for _, content := range []string{
+		"include::" + path + "[]\n",
+		"include::secret.txt[]\n",
+		"[source]\n----\ninclude::" + path + "[]\n----\n",
+	} {
+		result, err := r.Render("README.adoc", []byte(content))
+		if err != nil {
+			t.Fatalf("%q: unexpected error: %v", content, err)
+		}
+		if strings.Contains(result.HTML, secret) {
+			t.Errorf("%q: included file contents: %s", content, result.HTML)
+		}
+	}
+}
 
 func TestRenderAsciiDoc(t *testing.T) {
 	r := NewDefaultRegistry()
