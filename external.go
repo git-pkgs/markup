@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -213,6 +214,11 @@ type RSTRenderer struct{}
 // NewRSTRenderer creates a renderer for reStructuredText.
 func NewRSTRenderer() *RSTRenderer {
 	return &RSTRenderer{}
+}
+
+// Available returns true if an rst2html command is on $PATH.
+func (r *RSTRenderer) Available() bool {
+	return slices.ContainsFunc(rstCommands, toolAvailable)
 }
 
 func (r *RSTRenderer) Render(content []byte) (string, error) {
