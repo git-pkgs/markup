@@ -1,6 +1,7 @@
 package markup
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -484,6 +485,26 @@ func TestRenderOrgDoesNotReadFiles(t *testing.T) {
 		if strings.Contains(result.HTML, secret) {
 			t.Errorf("%q: included file contents: %s", content, result.HTML)
 		}
+	}
+}
+
+func TestRenderOrgDoesNotWriteToStderr(t *testing.T) {
+	stderr := os.Stderr
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = pw
+	defer func() { os.Stderr = stderr }()
+
+	_, renderErr := NewDefaultRegistry().Render("README.org", []byte("#+INCLUDE: \"/nonexistent\"\n\ntext [fn:missing]\n"))
+	_ = pw.Close()
+	out, readErr := io.ReadAll(pr)
+	if renderErr != nil || readErr != nil {
+		t.Fatalf("render: %v, read: %v", renderErr, readErr)
+	}
+	if len(out) != 0 {
+		t.Errorf("unexpected stderr output: %s", out)
 	}
 }
 
