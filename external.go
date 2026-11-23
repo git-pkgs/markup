@@ -201,8 +201,13 @@ func extractBodyFast(html string) (string, bool) {
 	return strings.TrimSpace(body), true
 }
 
-// RSTRenderer renders reStructuredText by trying rst2html first,
-// then falling back to rst2html.py.
+// rstCommands are tried in order. rst2html4 comes first because the HTML5
+// writer embeds local files for ":loading: embed" images even with
+// --no-file-insertion, and rst2html may select either writer.
+var rstCommands = []string{"rst2html4", "rst2html", "rst2html.py"}
+
+// RSTRenderer renders reStructuredText with the first available command
+// from rst2html4, rst2html and rst2html.py.
 type RSTRenderer struct{}
 
 // NewRSTRenderer creates a renderer for reStructuredText.
@@ -215,7 +220,7 @@ func (r *RSTRenderer) Render(content []byte) (string, error) {
 }
 
 func rstRender(content []byte) (string, error) {
-	for _, cmd := range []string{"rst2html", "rst2html.py"} {
+	for _, cmd := range rstCommands {
 		if toolAvailable(cmd) {
 			r := NewExternalRenderer(ExternalConfig{
 				Command:     cmd,

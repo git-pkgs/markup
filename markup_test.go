@@ -1,9 +1,11 @@
 package markup
 
 import (
+	"encoding/base64"
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -584,6 +586,52 @@ func TestRenderRSTTxt(t *testing.T) {
 	}
 	if result.Format != FormatRST {
 		t.Errorf("Format = %v, want FormatRST", result.Format)
+	}
+}
+
+func TestRenderRSTPrefersHTML4Writer(t *testing.T) {
+	binDir := t.TempDir()
+	for name, marker := range map[string]string{"rst2html4": "html4-writer", "rst2html": "default-writer"} {
+		script := "#!/bin/sh\nprintf '<body>" + marker + "</body>'\n"
+		if err := os.WriteFile(filepath.Join(binDir, name), []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", binDir)
+	toolCache.Clear()
+	t.Cleanup(toolCache.Clear)
+
+	result, err := NewDefaultRegistry().Render("README.rst", []byte("Title\n=====\n"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.HTML != "html4-writer" {
+		t.Errorf("HTML = %q, want output of rst2html4", result.HTML)
+	}
+}
+
+func TestRenderRSTDoesNotEmbedFiles(t *testing.T) {
+	if !slices.ContainsFunc(rstCommands, toolAvailable) {
+		t.Skip("rst2html not installed")
+	}
+	secret := "MARKUP_EMBED_SECRET"
+	path := filepath.Join(t.TempDir(), "secret.txt")
+	if err := os.WriteFile(path, []byte(secret+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	encoded := base64.StdEncoding.EncodeToString([]byte(secret + "\n"))
+	for _, content := range []string{
+		".. image:: " + path + "\n   :loading: embed\n",
+		".. figure:: " + path + "\n   :loading: embed\n",
+		".. include:: " + path + "\n",
+	} {
+		result, err := NewDefaultRegistry().Render("README.rst", []byte(content))
+		if err != nil {
+			t.Fatalf("%q: unexpected error: %v", content, err)
+		}
+		if strings.Contains(result.HTML, secret) || strings.Contains(result.HTML, encoded) {
+			t.Errorf("%q: included file contents: %s", content, result.HTML)
+		}
 	}
 }
 
